@@ -1,0 +1,415 @@
+enum Status {
+  ENABLE
+  DISABLE
+  DEPRECATED
+}
+
+enum Stage {
+  IDLE
+  RUNNING
+  QUEUED
+}
+
+enum Stages {
+    START
+    STOP
+    DAILY
+    WEEKLY
+    MONTHLY
+  }
+
+
+type ConnStrctjson @embedded {  
+ Name: String
+ Label : String
+ Value : String
+ IsRequired : Boolean 
+ IsEditable  : Boolean 
+ IsViewable : Boolean
+ FieldType  : String
+ dropdownfieldName : [String]
+ 
+ LookupValues      : [String]
+ SortOrder : Int @default(value: 0)
+}
+
+type EntityConnStrctjson @embedded {  
+  Name              : String
+  Value             : String
+  PluginId          : String
+  EntityID          : String 
+  Question          : String
+  FieldType         : String
+  LookupValues      : [String]
+  FieldLength       : Int
+  IsRequired        : Boolean
+  FieldName         : String
+  Answers           : String  
+  IsEditable        : Boolean 
+  IsViewable        : Boolean 
+}
+
+type Plugin {
+  PluginID            : ID! @id
+  PluginName          : String
+  PluginTitle         : String
+  PluginShortName     : String
+  PluginSEOName       : String @unique
+  PluginShortDesc     : String
+  PluginLongDesc      : String
+  AssemblyName        : String
+  Status              : Status @default(value: ENABLE)
+  pluginType          : String
+  CreatedDate         : DateTime @createdAt
+  CreatedBy           : String
+  ModifiedDate        : DateTime @updatedAt
+  ModifiedBy          : String
+  ImageName           : String
+  
+  ConnStructure       : [ConnStrctjson] @relation(link: INLINE)
+  DefaultStructure    : String
+  ConnectUrl          : String
+  Popular             : Boolean @default(value: true) 
+  Recent              : Boolean @default(value: true) 
+  PluginCategoryId    : PluginCategory @relation(link: INLINE)
+}
+
+
+type Entity  {
+  EntityID      : ID! @id
+  PluginID      : Plugin @relation(link: INLINE)
+  EntityName    : String
+  EntityType    : String
+  EntityShortDesc     : String
+  EntityLongDesc      : String
+  CreatedBy     : String
+  ConnectUrl    : String
+  CreatedDate   : DateTime @createdAt
+  ModifiedBy    : String
+  ModifiedDate  : DateTime @updatedAt
+  Status        : Status @default(value: ENABLE)  
+  ConfigStructure : [EntityConnStrctjson] @relation(link: INLINE)
+}
+
+type EntityMap {
+  EntityMapID     : ID! @id
+  SourceEntityID  : [Entity] @relation(name:"SourceEntityID", link : INLINE)
+  TargetEntityID  : [Entity] @relation(name:"TargetEntityID", link : INLINE)
+  Status          : Status @default(value: ENABLE)
+  EntityShortDesc     : String
+  EntityLongDesc      : String
+  CreatedBy	      : String 
+  CreatedDate     : DateTime @createdAt
+  ModifiedBy      : String	
+  ModifiedDate    : DateTime @updatedAt
+}
+
+type SubcriptionHistory {
+  SubcriptionHistoryId          : ID! @id  
+  TenantId                      : User @relation(link: INLINE)
+  ConnectorId                   : Connector @relation(link: INLINE) 
+  SubscriberID                  : SubscriptionIntegration @relation(link: INLINE)
+  SubcriptionHistoryName        : String!
+  PrimaryPluginID               : Plugin @relation(name:"PrimarypluginID", link : INLINE)
+  SecondaryPluginID             : Plugin @relation(name:"SecondarypluginID", link : INLINE)
+  Status                        : Status @default(value: ENABLE)
+  CreatedBy                     : String!
+  CreatedDate                   : DateTime! @createdAt
+  ModifiedBy                    : String!
+  ModifiedDate                  : DateTime! @updatedAt  
+}
+
+type Schedule {
+  ScheduleID                : ID! @id
+  TenantId                  : User @relation(link: INLINE)
+  ProcessId                 : Process @relation(link: INLINE) 
+  SubscriberProcess         : SubscriberProcess @relation(link : INLINE)
+  SubcriptionHistoryId      : SubcriptionHistory @relation(link: INLINE)
+  Field                     : String
+  Status                    : Stage
+  DailyOccurence            : String
+  ScheduleType              : String
+  DailyRecurrenceType       : String
+  OccursAt                  : String
+  DailyInterval             : String
+  DailyIntervalSpan         : String
+  WeekDays                  : [Int]
+  DayofMonth                : String
+  LastExecuted              : String
+  NextOccurence             : String
+  SubscriptionIntegrationId : SubscriptionIntegration @relation(link : INLINE)
+  CreatedDate               : String    
+  CreatedBy                 : String 
+  ModifiedDate              : String
+  ModifiedBy                : String
+  StartTime                 : String
+  EndTime                   : String
+  Type                      : String    
+}
+
+type Log {
+  LogId                 : ID! @id @unique
+  SubcriptionHistoryId  : SubcriptionHistory @relation(link: INLINE)
+  SubscriberProcess         : SubscriberProcess @relation(link : INLINE)
+  SubscriptionIntegrationId : SubscriptionIntegration @relation(link : INLINE)
+  ConnectorId           : Connector @relation(link : INLINE)
+  LogDate               : DateTime
+  Thread                : String
+  Level                 : String
+  ProcessId             : Process @relation(link: INLINE)
+  Operation             : String
+  Event                 : String
+  Sourcekeyfields       : String
+  Sourcekeyvalue        : String
+  Targetkeyfields       : String
+  Targetkeyvalue        : String
+  Message               : String
+  Exceptions            : String 
+  TenantId              : User @relation(link : INLINE)
+}
+
+type PluginCategory {
+  CategoryID    : ID! @id
+  CategoryName  : String!
+  CategoryDesc  : String
+}
+
+type Connector {
+  ConnectorId         : ID! @id
+  Status              : Status @default(value: ENABLE)
+  
+  ConnectorTitle      : String
+  ConnectorShortName  : String  @unique
+  ConnectorSEOName    : String @unique
+  ConnectorShortDesc  : String
+  ConnectorLongDesc   : String
+  CreatedBy           : String
+  CreatedDate         : DateTime @createdAt
+  ModifiedDate        : DateTime @updatedAt
+  ModifiedBy          : String
+  Popular             : Boolean @default(value: true) 
+  Recent              : Boolean @default(value: true) 
+  testuser            : String
+  PrimaryPluginId     : Plugin @relation(name: "Primaryplugin", link: INLINE)
+  SecondaryPluginId   : Plugin @relation(name: "Secondaryplugin", link: INLINE)
+}
+
+type Process {
+  ProcessId         : ID! @id
+  ConnectorId       : Connector @relation(link: INLINE)
+  ProcessShortDesc  : String
+  ProcessLongDesc   : String
+  Status            : Status @default(value: ENABLE)
+  CreatedBy         : String
+  CreatedDate       : DateTime! @createdAt
+  ModifiedDate      : DateTime! @updatedAt
+  ModifiedBy        : String
+  PrimaryEntity     : Entity @relation(name: "Primaryentity", link: INLINE)
+  SecondaryEntity   : Entity @relation(name: "SecondaryEntity", link: INLINE)
+}
+
+
+type User {
+  UserId          : ID! @id
+  FirstName       : String
+  LastName        : String
+  UserName        : String @unique
+  Address         : String
+  PhoneNumber     : String
+  PhoneCode      : String
+  Email           : String
+  TenantId        : String @unique
+  CompanyName     : String  
+  ZipCode         : String
+  Country         : String
+  State           : String
+  City            : String
+  IsAdmin         : String
+  Password        : String
+  ConfirmPassword : String
+}
+
+type SubscriptionIntegration {
+  SubscriptionIntegrationId         : ID! @id
+  NoOfLicenses                      : String
+  NoOfUsers                         : String
+  Status                            : Status @default(value: ENABLE)
+  TenantId                          : User @relation(link: INLINE)
+  ConnectorId                       : Connector @relation(link: INLINE)
+  SubscriptionStartDate             : DateTime! @createdAt
+  SubscriptionEndDate               : DateTime 
+  PrimaryPluginConnectionData       :  [ConnStrctjson] @relation(name: "Conncheck", link: INLINE)
+  SecondaryPluginConnectionData     :  [ConnStrctjson] @relation(name: "Connsecondary", link: INLINE)
+  ConfigStructure                   : [EntityConnStrctjson] @relation(name: "DefaultConfigConnStructure", link: INLINE)
+}
+
+type Field {
+  FieldID       : ID! @id
+  PluginsID     : Plugin @relation(link:INLINE)
+  EntityID      : Entity @relation(link: INLINE)
+  FieldName     : String 	
+  FieldShortDesc     : String
+  FieldLongDesc      : String
+  DataType      : String 
+  FieldType     : String
+  Status        : Status @default(value: ENABLE)
+  CreatedBy     : String	
+  CreatedDate	  : DateTime @createdAt
+  ModifiedBy    : String	
+  ModifiedDate  : DateTime @updatedAt
+}
+
+type FieldMap {
+  FieldMapID      : ID! @id
+  SourceEntityID  : Entity @relation(name : "SourrceEntityIDField", link:INLINE)
+  TargetEntityID  : Entity @relation(name : "TarrgetEntityIDField", link:INLINE)
+  SourceField     : [Field] @relation(name: "SourceFiield", link:INLINE)	
+  TargetField	    : [Field] @relation(name: "TargetFiield", link:INLINE) 
+  Status          : Status @default(value: ENABLE)	
+  FieldShortDesc     : String
+  FieldLongDesc      : String
+  CreatedBy       : String	
+  CreatedDate	    : DateTime @createdAt 
+  ModifiedBy	    : String 
+  ModifiedDate    : DateTime @updatedAt
+}
+
+type PluginParam {
+  PluginParamID : ID! @id
+  FieldType     : String
+  FieldName     : String
+  Caption       : String
+  PluginID      : Plugin @relation(link : INLINE)
+  Status        : Status @default(value: ENABLE)
+  Required      : Boolean @default(value: true)
+  CreatedBy     : String	
+  CreatedDate   : DateTime @createdAt 
+  ModifiedBy    : String 
+  ModifiedDate  : DateTime @updatedAt
+}
+
+type Testimonial {
+  TestimonialID   : ID! @id
+  Message         : String
+  Author          : String
+  Designation     : String
+  CompanyName     : String
+  ImageName       : String
+  CreatedBy       : String	
+  CreatedDate	    : DateTime @createdAt 
+  ModifiedBy	    : String 
+  ModifiedDate    : DateTime @updatedAt
+}
+
+enum DBClaims {
+  READWRITE #Read-Write 
+  READONLY  #Read-only     
+}
+
+type DatabaseUser {
+  UserId    : ID! @id
+  Name      : String!
+  Password  : String!
+  Claims    : DBClaims @default(value : READONLY)
+  Token     : String
+}
+
+type ProcessHistory {
+  ProcessHistoryId              : ID! @id
+  ProcessId                     : Process @relation(name: "ProcessId", link: INLINE)
+  TenantId                      : User @relation(name: "UserTenantId", link: INLINE)
+  LastSyncDate                  : String
+  CreatedDate                   : DateTime! @createdAt
+  ModifiedDate                  : DateTime! @updatedAt
+  Stage                         : Stage @default(value: IDLE)
+}
+
+type SubscriberProcess {
+  SubscriberProcessID : ID! @id
+  ProcessId           : Process @relation(link: INLINE)
+  TenantId            : User @relation(link : INLINE)
+  ConnectorId         : Connector @relation(link: INLINE)
+  Status              : Status @default(value: ENABLE)
+  Stage               : Stage @default(value: IDLE)
+  CreatedBy           : String
+  Schedule            : [Schedule] @relation(value: INLINE) 
+  CreatedDate         : DateTime! @createdAt
+  ModifiedDate        : DateTime! @updatedAt
+  ModifiedBy          : String
+  LastSyncDate        : String
+  PrimaryEntity       : Entity @relation(name: "Primaryentitysubcription", link: INLINE)
+  SecondaryEntity     : Entity @relation(name: "SecondaryEntitysubcription", link: INLINE)
+}
+
+type SubscriberEntity {
+  SubscriberEntityID  : ID! @id
+  PluginID            : Plugin @relation(link: INLINE)
+  EntityName          : String
+  EntityType          : String
+  EntityShortDesc     : String
+  EntityLongDesc      : String
+  CreatedBy           : String
+  CreatedDate         : DateTime @createdAt
+  ModifiedBy          : String
+  ModifiedDate        : DateTime @updatedAt
+  Status              : Status @default(value: ENABLE)
+}
+
+type SubscriberEntityMap {
+  SubscriberEntityMapID : ID! @id
+  SourceEntityID        : [Entity] @relation(name:"SubscriberEntityMapEntityIDfield", link : INLINE)
+  TargetEntityID        : [Entity] @relation(name:"SubscriberEntityMapEntityIDdata", link : INLINE)
+  Status                : Status @default(value: ENABLE)
+  EntityShortDesc       : String
+  EntityLongDesc        : String
+  CreatedBy	            : String 
+  CreatedDate           : DateTime @createdAt
+  ModifiedBy            : String	
+  ModifiedDate          : DateTime @updatedAt
+}
+
+type SubscriberField {
+  SubscriberFieldID : ID! @id
+  PluginsID         : Plugin @relation(link:INLINE)
+  EntityID          : Entity @relation(link: INLINE)
+  FieldName         : String 	
+  DataType          : String 
+  FieldType         : String
+  Status            : Status @default(value: ENABLE)
+  CreatedBy         : String	
+  CreatedDate	      : DateTime @createdAt
+  ModifiedBy        : String	
+  ModifiedDate      : DateTime @updatedAt
+}
+
+type SubscriberFieldMap {
+  SubscriberFieldMapID  : ID! @id
+  SourceEntityID        : Entity @relation(name : "SourrceSubscriberFieldMapEntityID", link:INLINE)
+  TargetEntityID        : Entity @relation(name : "TarrgetSubscriberFieldMapEntityID", link:INLINE)
+  SourceField           : [Field] @relation(name: "SourceSubscriberFieldMapFiield", link:INLINE)	
+  TargetField	          : [Field] @relation(name: "TargetSubscriberFieldMapFiield", link:INLINE) 
+  Status                : Status @default(value: ENABLE)	
+  FieldShortDesc     : String
+  FieldLongDesc      : String
+  CreatedBy             : String	
+  CreatedDate	          : DateTime @createdAt 
+  ModifiedBy	          : String 
+  ModifiedDate          : DateTime @updatedAt
+}
+
+type SourceTargetFieldmapping {
+  SourceTargetFieldmappingID : ID! @id
+  Entity          : Entity @relation(link:INLINE)
+  Connector       : Connector @relation(link:INLINE)
+  TenantId        : User @relation(link: INLINE)
+  FieldShortDesc     : String
+  FieldLongDesc      : String
+  SourceKey       : String
+  SourceKeyValue	: String
+  TargetKey	      : String
+  TargetKeyValue	: String
+  OtherParam      : String
+}
+
+
+  	

@@ -1,0 +1,17 @@
+mutation {
+  DBUser1: createDatabaseUser(data: {
+    Name: "Admin"
+    Password: "$2y$12$YJKGtkaCDVgvZN0dBHhFuuCDoZLbzGlYnxXJfd0EkPg3hKueQdeaa"
+    Claims : READWRITE
+  }) {
+    UserId
+  }
+
+  DBUser2: createDatabaseUser(data: {
+    Name: "Client1"
+    Password: "$2y$12$YJKGtkaCDVgvZN0dBHhFuuCDoZLbzGlYnxXJfd0EkPg3hKueQdeaa"
+    Claims : READONLY
+  }) {
+    UserId
+  }
+}
